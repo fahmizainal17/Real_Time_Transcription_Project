@@ -12,10 +12,11 @@ The application allows users to:
 ### Screenshot
 
 Below is a screenshot of the application in action:
-[test_homepage]
+
+### Real-time Audio Transcription test HomePage
 ![Real-time Audio Transcription Screenshot](./assets/test_homepage.png)
 
-[result]
+### Real-time Audio Transcription Test
 ![Real-time Audio Transcription Test](./assets/real_test.png)
 ## Prerequisites
 
