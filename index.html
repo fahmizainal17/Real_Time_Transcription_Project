@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Real-time Transcription</title>
+    <script src="/socket.io/socket.io.js"></script>
+    <style>
+        /* Add your CSS styles here */
+    </style>
+</head>
+<body>
+    <div>
+        <h1>Real-time Audio Transcription</h1>
+        <button id="startButton">Start Transcription</button>
+        <button id="stopButton">Stop Transcription</button>
+        <div id="transcript"></div>
+    </div>
+
+    <script>
+        const socket = io();
+
+        const startButton = document.getElementById('startButton');
+        const stopButton = document.getElementById('stopButton');
+        const transcript = document.getElementById('transcript');
+
+        startButton.addEventListener('click', startRecording);
+        stopButton.addEventListener('click', stopRecording);
+
+        let audioContext;
+        let audioInput;
+        let processor;
+
+        function startRecording() {
+            navigator.mediaDevices.getUserMedia({ audio: true })
+                .then(function(stream) {
+                    audioContext = new AudioContext();
+                    audioInput = audioContext.createMediaStreamSource(stream);
+                    processor = audioContext.createScriptProcessor(1024, 1, 1);
+
+                    audioInput.connect(processor);
+                    processor.connect(audioContext.destination);
+
+                    processor.onaudioprocess = function(event) {
+                        const float32Array = event.inputBuffer.getChannelData(0);
+                        const int16Array = new Int16Array(float32Array.length);
+                        for (let i = 0; i < float32Array.length; i++) {
+                            int16Array[i] = Math.max(-32768, Math.min(32767, Math.floor(float32Array[i] * 32768)));
+                        }
+                        socket.emit('audioData', int16Array.buffer);
+                    };
+
+                    socket.emit('startTranscription');
+                    transcript.innerHTML = 'Recording...';
+                })
+                .catch(function(error) {
+                    console.error('Error accessing microphone:', error);
+                    transcript.innerHTML = 'Error: ' + error.message;
+                });
+        }
+
+        function stopRecording() {
+            if (audioContext && audioContext.state !== 'closed') {
+                audioInput.disconnect();
+                processor.disconnect();
+                audioContext.close();
+                socket.emit('stopTranscription');
+                transcript.innerHTML = 'Stopped.';
+            }
+        }
+
+        socket.on('transcription', function(data) {
+            if (data.isFinal) {
+                transcript.innerHTML += '<p><b>Final Transcript:</b> ' + data.text + '</p>';
+            } else {
+                transcript.innerHTML += '<p>' + data.text + '</p>';
+            }
+        });
+
+        socket.on('error', function(errorMessage) {
+            transcript.innerHTML = '<p>Error: ' + errorMessage + '</p>';
+        });
+    </script>
+</body>
+</html>
