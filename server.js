@@ -111,15 +111,6 @@ io.on('connection', (socket) => {
     });
 });
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-const PORT = process.env.PORT || 3007;
-=======
-const PORT = process.env.PORT || 3000;
->>>>>>> 5458c2d (feat added files)
-=======
-const PORT = process.env.PORT || 3007;
->>>>>>> e918355 (feat:added files)
 server.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);
 });
